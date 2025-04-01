@@ -113,7 +113,7 @@ class FeiShuWiki(PluginBase):
 
                     output_message += f"{resource_name}\n{link}\n---\n"
 
-                output_message += f"\n更多请点击链接查看：https://px00000s00.feishu.cn/wiki/UUUUvvvv5iYJbhktwaxxxxxmnYe?fromScene=spaceOverview&table=tblwllllKLRQZGiV&view=vew999hvaI"
+                output_message += f"\n更多请点击链接查看：https://github.com/yunus0906/XYBotV2-FeiShuWiki"
 
             await bot.send_at_message(message["FromWxid"], output_message, [message["SenderWxid"]])
 
