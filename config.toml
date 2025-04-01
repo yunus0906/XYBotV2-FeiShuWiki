@@ -1,0 +1,19 @@
+[FeiShuWiki]
+
+# 获取飞书wiki(知识库)中数据表的内容
+# > 该文档仅提供解题思路，小白可根据文档操作，大佬可根据自己需求自定义
+
+enable = true # 是否启用插件
+command = ["群搜"] # 搜索关键词
+
+app_id = "" # 飞书开放平台 应用凭证 App ID
+app_secret = "" # 飞书开放平台 应用凭证 App Secret
+
+wiki_token = "" # wiki的token，地址栏中 wiki/后的字符串就是
+table_id = "" # 地址栏中获取table_id
+view_id = "" # 地址栏中获取view_id
+
+app_token = "" # 可以在utils中获取，获取AppToken需要准备好AppID、AppSecret、WikiToken。返回json中 obj_token就是当前值
+
+search_name = "资源名" # 查询的列表名
+search_size = "20" # 查询页数
