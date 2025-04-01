@@ -5,7 +5,6 @@ from WechatAPI import WechatAPIClient
 from utils.decorators import *
 from utils.plugin_base import PluginBase
 from loguru import logger
-import jieba
 import json
 
 import lark_oapi as lark
