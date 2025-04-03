@@ -16,4 +16,8 @@ view_id = "" # 地址栏中获取view_id
 app_token = "" # 可以在utils中获取，获取AppToken需要准备好AppID、AppSecret、WikiToken。返回json中 obj_token就是当前值
 
 search_name = "资源名" # 查询的列表名
-search_size = "20" # 查询页数
+search_size = 20 # 查询页数
+
+price = 2 # 用一次扣积分，如果0则不扣
+admin_ignore = false # admin是否忽略扣除
+whitelist_ignore = false # 白名单是否忽略扣除

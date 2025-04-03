@@ -10,6 +10,8 @@ import json
 import lark_oapi as lark
 from lark_oapi.api.bitable.v1 import *
 
+from database.XYBotDB import XYBotDB
+
 class FeiShuWiki(PluginBase):
     description = "获取飞书Wiki多维表内容"
     author = "yunus"
@@ -24,10 +26,14 @@ class FeiShuWiki(PluginBase):
 
         try:
 
+            with open("main_config.toml", "rb") as f:
+                config = tomllib.load(f)
+
+            self.admins = config["XYBot"]["admins"]
+
             with open(config_path, "rb") as f:
                 config = tomllib.load(f)
 
-            # 读取基本配置
             basic_config = config.get("FeiShuWiki", {})
             self.enable = basic_config.get("enable", False)  # 读取插件开关
             self.command = basic_config.get("command", ["群搜"])
@@ -36,8 +42,15 @@ class FeiShuWiki(PluginBase):
             self.tableId = basic_config.get("table_id", "")
             self.viewID = basic_config.get("view_id", "")
             self.appToken = basic_config.get("app_token", "")
+
             self.searchName = basic_config.get("search_name", "资源名")
             self.searchSize = basic_config.get("search_size", 20)
+
+            self.price = basic_config.get("price", 0)
+            self.admin_ignore = basic_config.get("admin_ignore", False)
+            self.whitelist_ignore = basic_config.get("whitelist_ignore", False)
+
+            self.db = XYBotDB()
 
         except Exception as e:
             logger.error(f"加载FeiShuWiki配置文件失败: {str(e)}")
@@ -59,8 +72,15 @@ class FeiShuWiki(PluginBase):
                                       [message["SenderWxid"]])
             return
 
-        search_name = content[len(command[0]):].strip()
+        try:
+            if await self._check_point(bot, message):
+                search_name = content[len(command[0]):].strip()
+                await self.feishu_wiki(bot, message, search_name)
+                return
+        except Exception as e:
+            logger.error(e)
 
+    async def feishu_wiki(self, bot: WechatAPIClient, message: dict, search_name):
         logger.info(f"飞书查询开始: {search_name}")
         try:
             client = lark.Client.builder().app_id(self.appId).app_secret(self.appSecret).log_level(
@@ -89,7 +109,7 @@ class FeiShuWiki(PluginBase):
                 logger.error(
                     f"client.bitable.v1.app_table_record.search failed, code: {response.code}, msg: {response.msg}, log_id: {response.get_log_id()}, resp: \n{json.dumps(json.loads(response.raw.content), indent=4, ensure_ascii=False)}"
                 )
-                await bot.send_at_message(message["FromWxid"], f"❌查询错误，请联系管理员",[message["SenderWxid"]])
+                await bot.send_at_message(message["FromWxid"], f"❌查询错误，请联系管理员", [message["SenderWxid"]])
                 return
 
             data = response.data
@@ -100,6 +120,7 @@ class FeiShuWiki(PluginBase):
             output_message = "\n-----XYBotV2-----\n"
             output_message += f"查询资源：{search_name}\n"
             output_message += f"共查询到：{total} 条\n"
+            # output_message += f"扣除积分：{self.price}\n"
 
             if total > 0:
                 output_message += "---\n"
@@ -118,3 +139,23 @@ class FeiShuWiki(PluginBase):
 
         except Exception as e:
             logger.error(e)
+
+    async def _check_point(self, bot: WechatAPIClient, message: dict) -> bool:
+        wxid = message["SenderWxid"]
+
+        logger.error(f"{self.admin_ignore} {self.admins}, {wxid}")
+
+        if wxid in self.admins and self.admin_ignore:
+            return True
+        elif self.db.get_whitelist(wxid) and self.whitelist_ignore:
+            return True
+        else:
+            if self.db.get_points(wxid) < self.price:
+                await bot.send_at_message(message["FromWxid"],
+                                          f"\n"
+                                          f"😭你的积分不够啦！需要 {self.price} 积分",
+                                          [wxid])
+                return False
+
+            self.db.add_points(wxid, -self.price)
+            return True

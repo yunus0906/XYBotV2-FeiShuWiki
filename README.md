@@ -48,11 +48,16 @@ app_token = "" # 可以在utils中获取，获取AppToken需要准备好AppID、
 
 search_name = "资源名" # 查询的列表名
 search_size = 20 # 查询页数
+
+price = 2 # 用一次扣积分，如果0则不扣
+admin_ignore = false # admin是否忽略扣除
+whitelist_ignore = false # 白名单是否忽略扣除
 ```
 
 ## 开发日志
 
-- v1.0.0: 202500331 第一版发布。
+- v1.0.0: 20250331 第一版发布。
+- v1.0.1: 20250403 查询时扣除积分功能。
 
 ## 许可证
 
