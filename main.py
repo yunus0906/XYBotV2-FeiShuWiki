@@ -52,7 +52,7 @@ class FeiShuWiki(PluginBase):
             self.whitelist_ignore = basic_config.get("whitelist_ignore", False)
 
             self.wiki_admins = basic_config.get("wiki_admins", [])
-            self.set_cell_command = basic_config.get("set_cell_command", "")
+            self.set_cell_command = basic_config.get("set_cell_command", "今日更新")
 
             self.db = XYBotDB()
 
@@ -208,8 +208,8 @@ class FeiShuWiki(PluginBase):
                 lark.LogLevel.DEBUG).build()
 
             request: BatchCreateAppTableRecordRequest = BatchCreateAppTableRecordRequest.builder() \
-            .app_token("NRZCbIuCIaSE1jswxCDcIwUknTd") \
-            .table_id("tblwlHqPKLRQZGiV") \
+            .app_token(self.appToken) \
+            .table_id(self.tableId) \
             .user_id_type("user_id") \
             .request_body(BatchCreateAppTableRecordRequestBody.builder()
                 .records(records)
