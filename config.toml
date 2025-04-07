@@ -21,3 +21,7 @@ search_size = 20 # 查询页数
 price = 2 # 用一次扣积分，如果0则不扣
 admin_ignore = false # admin是否忽略扣除
 whitelist_ignore = false # 白名单是否忽略扣除
+
+# 新增内容到多维表
+wiki_admins = [] # 允许新增命令的管理员，如果参数为空，则使用main_config的admins管理员列表
+set_cell_command = "今日更新" # 新增指令关键词，需要携带改词才可以触发新增

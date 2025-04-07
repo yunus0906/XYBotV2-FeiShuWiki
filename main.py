@@ -1,5 +1,6 @@
 import tomllib  # 确保导入tomllib以读取配置文件
 import os  # 确保导入os模块
+import re
 
 from WechatAPI import WechatAPIClient
 from utils.decorators import *
@@ -50,6 +51,9 @@ class FeiShuWiki(PluginBase):
             self.admin_ignore = basic_config.get("admin_ignore", False)
             self.whitelist_ignore = basic_config.get("whitelist_ignore", False)
 
+            self.wiki_admins = basic_config.get("wiki_admins", [])
+            self.set_cell_command = basic_config.get("set_cell_command", "")
+
             self.db = XYBotDB()
 
         except Exception as e:
@@ -79,6 +83,46 @@ class FeiShuWiki(PluginBase):
                 return
         except Exception as e:
             logger.error(e)
+
+    @on_at_message
+    async def handle_at(self, bot: WechatAPIClient, message: dict):
+        if not self.enable:
+            return
+
+        wxid = message["SenderWxid"]
+        if len(self.wiki_admins) == 0:
+            admins = self.admins
+        else:
+            admins = self.wiki_admins
+
+        if wxid not in admins:
+            return
+
+        content = str(message["Content"]).strip()
+
+        if self.set_cell_command not in content:
+            await bot.send_at_message(message["FromWxid"], "❌您没有权限使用此功能", [message["SenderWxid"]])
+            return
+
+        try:
+            pattern = re.compile(r"(.+?)\n(https?://\S+)")
+            matches = pattern.findall(content)
+
+            records = []
+            for name, url in matches:
+                record = AppTableRecord.builder() \
+                    .fields({"网盘链接": {"text": url, "url": url}, "资源名": name.strip()}) \
+                    .build()
+
+                records.append(record)
+
+            await self.set_cell(bot, message, records)
+
+        except Exception as e:
+            logger.error(e)
+            await bot.send_at_message(message["FromWxid"], "❌设置失败，请联系管理员", [message["SenderWxid"]])
+
+        return False
 
     async def feishu_wiki(self, bot: WechatAPIClient, message: dict, search_name):
         logger.info(f"飞书查询开始: {search_name}")
@@ -143,8 +187,6 @@ class FeiShuWiki(PluginBase):
     async def _check_point(self, bot: WechatAPIClient, message: dict) -> bool:
         wxid = message["SenderWxid"]
 
-        logger.error(f"{self.admin_ignore} {self.admins}, {wxid}")
-
         if wxid in self.admins and self.admin_ignore:
             return True
         elif self.db.get_whitelist(wxid) and self.whitelist_ignore:
@@ -159,3 +201,30 @@ class FeiShuWiki(PluginBase):
 
             self.db.add_points(wxid, -self.price)
             return True
+
+    async def set_cell(self, bot: WechatAPIClient, message: dict, records: list):
+        try:
+            client = lark.Client.builder().app_id(self.appId).app_secret(self.appSecret).log_level(
+                lark.LogLevel.DEBUG).build()
+
+            request: BatchCreateAppTableRecordRequest = BatchCreateAppTableRecordRequest.builder() \
+            .app_token("NRZCbIuCIaSE1jswxCDcIwUknTd") \
+            .table_id("tblwlHqPKLRQZGiV") \
+            .user_id_type("user_id") \
+            .request_body(BatchCreateAppTableRecordRequestBody.builder()
+                .records(records)
+                .build()) \
+            .build()
+
+            response: BatchCreateAppTableRecordResponse = client.bitable.v1.app_table_record.batch_create(request)
+
+            if not response.success():
+                lark.logger.error(
+                    f"client.bitable.v1.app_table_record.batch_create failed, code: {response.code}, msg: {response.msg}, log_id: {response.get_log_id()}, resp: \n{json.dumps(json.loads(response.raw.content), indent=4, ensure_ascii=False)}")
+                return
+
+            await bot.send_at_message(message["FromWxid"], "✅已上传到群文档", [message["SenderWxid"]])
+
+        except Exception as e:
+            logger.error(e)
+            await bot.send_at_message(message["FromWxid"], "❌设置失败，请联系管理员", [message["SenderWxid"]])
