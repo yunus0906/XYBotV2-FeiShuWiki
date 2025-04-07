@@ -16,7 +16,7 @@ from database.XYBotDB import XYBotDB
 class FeiShuWiki(PluginBase):
     description = "获取飞书Wiki多维表内容"
     author = "yunus"
-    version = "1.0.1"
+    version = "1.0.2"
 
     # 同步初始化
     def __init__(self):

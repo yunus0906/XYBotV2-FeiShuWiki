@@ -52,12 +52,31 @@ search_size = 20 # 查询页数
 price = 2 # 用一次扣积分，如果0则不扣
 admin_ignore = false # admin是否忽略扣除
 whitelist_ignore = false # 白名单是否忽略扣除
+
+# 新增内容到多维表
+wiki_admins = [] # 允许新增命令的管理员，如果参数为空，则使用main_config的admins管理员列表
+set_cell_command = "今日更新" # 新增指令关键词，需要携带改词才可以触发新增
+```
+
+### 新增内容到多维表
+
+@你的机器人触发命令
+
+正则表达式: `r"(.+?)\n(https?://\S+)"`
+
+``` text
+@xybot 今日更新
+资源名1
+https://pan.baidu.com/wap/init?surl=xxxxxxx&pwd=xxxx
+资源名2
+https://pan.quark.cn/s/xxxx
 ```
 
 ## 开发日志
 
 - v1.0.0: 20250331 第一版发布。
 - v1.0.1: 20250403 查询时扣除积分功能。
+- v1.0.2: 20250407 更新将聊天内容保存到多维库中。
 
 ## 许可证
 
